@@ -16,14 +16,14 @@ import { CustomerService } from './services/customerService.js';
 import { InventoryService } from './services/inventoryService.js';
 import { SalesService } from './services/salesService.js';
 
-// Initialize services
-const dbManager = new DatabaseManager();
-const analyticsEngine = new AnalyticsEngine(dbManager);
-const securityManager = new SecurityManager();
-const reportGenerator = new ReportGenerator(dbManager, analyticsEngine);
-const customerService = new CustomerService(dbManager);
-const inventoryService = new InventoryService(dbManager);
-const salesService = new SalesService(dbManager);
+// Initialize services (will be initialized after database is ready)
+let dbManager: DatabaseManager;
+let analyticsEngine: AnalyticsEngine;
+let securityManager: SecurityManager;
+let reportGenerator: ReportGenerator;
+let customerService: CustomerService;
+let inventoryService: InventoryService;
+let salesService: SalesService;
 
 // Define comprehensive tool schema
 const BusinessIntelligenceToolSchema = z.object({
@@ -264,8 +264,17 @@ class BusinessIntelligenceMCPServer {
 
   async run() {
     // Initialize database and sample data
+    dbManager = new DatabaseManager();
     await dbManager.initialize();
     await dbManager.seedSampleData();
+    
+    // Initialize services after database is ready
+    analyticsEngine = new AnalyticsEngine(dbManager);
+    securityManager = new SecurityManager();
+    reportGenerator = new ReportGenerator(dbManager, analyticsEngine);
+    customerService = new CustomerService(dbManager);
+    inventoryService = new InventoryService(dbManager);
+    salesService = new SalesService(dbManager);
     
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
