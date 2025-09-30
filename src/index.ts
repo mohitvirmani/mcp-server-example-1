@@ -89,11 +89,17 @@ class BusinessIntelligenceMCPServer {
       const { name, arguments: args } = request.params;
       
       try {
-        // Validate and authenticate request
+        // Validate request structure and authenticate
         await securityManager.validateRequest(request);
+        securityManager.authenticateRequest(request);
         
         // Parse and validate arguments
         const validatedArgs = BusinessIntelligenceToolSchema.parse(args);
+
+        // Remove any auth artifacts from args before routing
+        if (validatedArgs && typeof validatedArgs === 'object') {
+          delete (validatedArgs as any).authToken;
+        }
         
         // Route to appropriate service
         const result = await this.routeRequest(name, validatedArgs);

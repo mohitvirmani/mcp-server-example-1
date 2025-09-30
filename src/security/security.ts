@@ -20,6 +20,26 @@ export class SecurityManager {
     };
   }
 
+  /**
+   * Authenticate incoming MCP request. Supports bearer token in `meta.authToken`
+   * and optionally in arguments as `authToken`. Prefer meta over args.
+   */
+  authenticateRequest(request: any): void {
+    const tokenFromMeta = request?.params?.meta?.authToken;
+    const tokenFromArgs = request?.params?.arguments?.authToken;
+    const token = tokenFromMeta || tokenFromArgs;
+
+    if (!token || typeof token !== 'string') {
+      throw new Error('Authentication required: missing token');
+    }
+
+    // Will throw on invalid/expired
+    const decoded = this.verifyToken(token);
+
+    // Attach principal for downstream usage
+    (request as any).principal = decoded;
+  }
+
   async validateRequest(request: any): Promise<boolean> {
     try {
       // Basic request validation
